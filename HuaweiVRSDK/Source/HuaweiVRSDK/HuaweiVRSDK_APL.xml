@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--HuaweiVRHMD plugin additions-->
+<root xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- init section is always evaluated once per architecture -->
+  <init>
+    <log text="HuaweiVRSDK init"/>
+  </init>
+
+  <!-- optional files or directories to copy to Intermediate/Android/APK -->
+  <resourceCopies>
+    <log text="Copying HuaweiVRSDK runtime files to staging"/>
+
+    <isArch arch="armeabi-v7a">
+
+      <copyFile src="$S(PluginDir)/libs/android_arm/libPluginProxy.so"
+           dst="$S(BuildDir)/libs/armeabi-v7a/libPluginProxy.so" />
+
+    </isArch>
+
+    <copyFile src="$S(PluginDir)/libs/LibUpdate.jar"
+          dst="$S(BuildDir)/libs/LibUpdate.jar" />
+		  
+    <copyFile src="$S(PluginDir)/vr_icon.png"
+          dst="$S(BuildDir)/assets/vr_icon.png" />
+
+  </resourceCopies>
+
+  <!-- optional additions to proguard -->
+  <proguardAdditions>
+    <insert>
+      -keep class com.huawei.** {
+      *;
+      }
+    </insert>
+  </proguardAdditions>
+
+  <androidManifestUpdates>
+    <addElements tag="application">
+      <meta-data android:name="com.huawei.android.vr.application.mode" android:value="vr_only"/>
+	  <meta-data android:name="com.huawei.android.vr.application.type" android:value="game"/>
+	  <meta-data android:name="com.huawei.vr.application.freeDegree" android:value="6dof" />
+    </addElements>
+
+    <addAttribute tag="activity" name="android:taskAffinity" value=":finishing"/>
+
+    <addPermission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <addPermission android:name="com.huawei.android.permission.VR"/>
+    <addPermission android:name="com.huawei.vrhandle.permission.DEVICE_MANAGER" />
+
+    <loopElements tag="activity">
+      <log text="Set HuaweiVRSDK GameActivity category 1"/>
+      <setStringFromAttribute result="activityName" tag="$" name="android:name"/>
+      <setBoolIsEqual result="bGameActivity" arg1="$S(activityName)" arg2="com.epicgames.ue4.GameActivity"/>
+      <log text="Set HuaweiVRSDK GameActivity category $S(activityName) Result = $B(bGameActivity)"/>
+      <if condition="bGameActivity">
+        <true>
+          <log text="Set HuaweiVRSDK GameActivity category 2"/>
+
+          <!-- Check for existing intent filter -->
+          <setBool result="bHasIntentFilter" value="false" />
+          <loopElements tag="intent-filter">
+            <setBool result="bHasIntentFilter" value="true" />
+          </loopElements>
+
+          <!-- If no intent filter found, add a new one -->
+          <if condition="bHasIntentFilter">
+            <false>
+              <setElement result="newIntentFilter" value="intent-filter" />
+              <addElement tag="$" name="newIntentFilter" />
+            </false>
+          </if>
+
+          <!-- add DEFAULT intent category instead -->
+          <setElement result="intentAction" value="action"/>
+          <addAttribute tag="$intentAction" name="android:name" value="com.huawei.android.vr.action.MAIN"/>
+          <addElement tag="intent-filter" name="intentAction"/>
+          
+          <!-- add DEFAULT intent category instead -->
+          <setElement result="intentInfo" value="category"/>
+          <addAttribute tag="$intentInfo" name="android:name" value="android.intent.category.DEFAULT"/>
+          <addElement tag="intent-filter" name="intentInfo"/>
+        </true>
+      </if>
+
+      <setBoolIsEqual result="bSplashActivity" arg1="$S(activityName)" arg2="com.epicgames.ue4.SplashActivity"/>
+      <log text="Set HuaweiVRSDK GameActivity category $S(activityName) Result = $B(bSplashActivity)"/>
+      <if condition="bSplashActivity">
+        <true>
+          <loopElements tag="intent-filter">
+            <removeElement tag="$"/>
+          </loopElements>
+        </true>
+      </if>
+    </loopElements>
+
+  </androidManifestUpdates>
+
+  <gameActivityImportAdditions>
+    <insert>
+import com.huawei.hvr.*;
+import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Matrix;
+import android.graphics.Paint;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.FileOutputStream;
+import java.io.FileNotFoundException;
+    </insert>
+  </gameActivityImportAdditions>
+
+  <gameActivityClassAdditions>
+    <insert>
+      public native void nativeOnCreate();
+      public native void nativeOnPause();
+      public native void nativeOnResume();
+      public native void nativeOnDestory();
+    </insert>
+  </gameActivityClassAdditions>
+
+  <gameActivityOnCreateAdditions>
+    <insert>
+      Log.debug("==============> LXM: OnCreate 1!");
+      System.loadLibrary("PluginProxy");
+      Log.debug("==============> LXM: OnCreate 2!");
+      new LibUpdateClient(this).runUpdate();
+      Log.debug("==============> LXM: OnCreate 3!");
+
+      nativeOnCreate();
+    </insert>
+  </gameActivityOnCreateAdditions>
+
+  <gameActivityOnPauseAdditions>
+    <insert>
+        nativeOnPause();
+    </insert>
+  </gameActivityOnPauseAdditions>
+
+  <gameActivityOnResumeAdditions>
+    <insert>
+        nativeOnResume();
+    </insert>
+  </gameActivityOnResumeAdditions>
+
+  <gameActivityOnDestroyAdditions>
+    <insert>
+        nativeOnDestory();
+    </insert>
+  </gameActivityOnDestroyAdditions>
+
+</root>
