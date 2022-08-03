@@ -1,0 +1,28 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "3.5.0.73",
+	"FriendlyName": "HuaweiVRController",
+	"Description": "Support for the Huawei VR motion controller",
+	"Category": "Input Devices",
+	"CreatedBy": "Huawei",
+	"CreatedByURL": "",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"EngineVersion": "4.26.0",
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"Installed": true,
+	"Modules": [
+		{
+			"Name": "HuaweiVRController",
+			"Type": "Runtime",
+			"LoadingPhase": "PostConfigInit",
+			"WhitelistPlatforms": [
+				"Android",
+				"Win64"
+			]
+		}
+	]
+}
